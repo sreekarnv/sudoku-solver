@@ -3,6 +3,8 @@
 
 # include <stdio.h>
 # include <stdlib.h>
+#include <math.h>
+
 
 void read_grid_from_file(int size, char *ip_file, int grid[36][36]) {
     FILE *fp;
@@ -25,73 +27,66 @@ void print_grid(int size, int grid[36][36]) {
 }
 
 
-int isPositionValid(int grid[36][36], int y, int x, int n)
-{
+int isPositionValid(int grid[36][36], int y, int x, int possibleNumber, int size) {
 
-    for (int i = 0; i <= 8; i++)
-    {
-        if (grid[i][y] == n)
-        {
+    // check if the possibleNumber is present in the column
+    for (int i = 0; i < size; i++) {
+        if (grid[i][y] == possibleNumber) {
             return 0;
         }
     }
 
-    for (int i = 0; i <= 8; i++)
-    {
-        if (grid[x][i] == n)
-        {
+    // check if the possibleNumber is present in the row
+    for (int i = 0; i < size; i++) {
+        if (grid[x][i] == possibleNumber) {
             return 0;
         }
     }
 
-    int startx = x - x % 3;
-    int starty = y - y % 3;
+    int k = sqrt(size);
+    int startx = x - x % k;
+    int starty = y - y % k;
 
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            if (grid[i + startx][j + starty] == n)
-            {
+    // check if the possibleNumber is present in the box
+    for (int i = 0; i < k; i++) {
+        for (int j = 0; j < k; j++) {
+            if (grid[i + startx][j + starty] == possibleNumber) {
                 return 0;
             }
         }
     }
 
+    // return 1 if the possibleNumber is a valid Number
     return 1;
 }
 
-int bruteForceSudokuRecurse(int sudoku[36][36], int y, int x)
-{
-    if (y == 9 && x == 8)
-    {
+int bruteForceSudokuRecurse(int sudoku[36][36], int y, int x, int size) {
+    if (y == (size - 1)   && x == (size - 1)) {
+        // Base case breaks at the end of the sudoku board - (size-1, size-1)
         return 1;
     }
 
-    if (y == 9)
-    {
+    if (y == (size)) {
+        // reset the board back to first position in y direction
+        // and move to next row
         x++;
         y = 0;
     }
 
-    if (sudoku[x][y] > 0)
-    {
-        return bruteForceSudokuRecurse(sudoku, y + 1, x);
+    if (sudoku[x][y] > 0) {
+        // Resembles already filled box, move to next box
+        return bruteForceSudokuRecurse(sudoku, y + 1, x, size);
     }
 
-    for (int num = 1; num <= 9; num++)
-    {
+    for (int possibleNumber = 1; possibleNumber <= size; possibleNumber++) {
+        if (isPositionValid(sudoku, y, x, possibleNumber, size) == 1) {
+            // if number is valid fill the box
+            sudoku[x][y] = possibleNumber;
 
-        if (isPositionValid(sudoku, y, x, num) == 1)
-        {
-            sudoku[x][y] = num;
-
-            if (bruteForceSudokuRecurse(sudoku, y + 1, x) == 1)
-            {
+            if (bruteForceSudokuRecurse(sudoku, y + 1, x, size) == 1) {
                 return 1;
             }
         }
-
         sudoku[x][y] = 0;
     }
     return 0;
@@ -104,13 +99,11 @@ int main(int argc, char *argv[]) {
         printf("Usage: ./sudoku.out grid_size inputfile");
         exit(-1);
     }
-
     size = atoi(argv[1]);
     read_grid_from_file(size, argv[2], grid);
 
     /* Do your thing here */
-    if (bruteForceSudokuRecurse(grid, 0, 0) == 0)
-    {
+    if (bruteForceSudokuRecurse(grid, 0, 0, size) == 0) {
         printf("No solution exists");
     }
 
