@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-int solved = 1;
 int checkGrid[3] = {0};
 int backtracks = 0;
 struct Element {
@@ -23,6 +22,13 @@ struct cell {
     int value;
     int possibleValues[37];
 };
+
+struct args {
+    int grid[36][36];
+    int size;
+};
+
+int solved = 0;
 
 int changes = 0;
 
@@ -53,18 +59,19 @@ void * rowSolver(void* _args) {
     int y = element->y;
     int possibleNumber = element->possibleNumber;
     int size = element->size;
-    if(solved == 0) {
-        return 0;
-    }
 
     for (int i = 0; i < size; i++) {
         if (element->grid[i][y] == possibleNumber) {
-            solved = 0;
-            return 0;
+            checkGrid[0] = 0;
+            free (element);
+            pthread_exit (NULL);
+            return NULL;
         }
     }
     checkGrid[0] = 1;
-    return 0;
+    free (element);
+    pthread_exit (NULL);
+    return NULL;
 
 }
 
@@ -75,25 +82,23 @@ void * colSolver(void* _args) {
     int y = element->y;
     int possibleNumber = element->possibleNumber;
     int size = element->size;
-if(solved == 0) {
-        return 0;
-    }
+
     for (int i = 0; i < size; i++) {
         if (element->grid[x][i] == possibleNumber) {
 
-            solved = 0;
-          return 0;
+            checkGrid[1] = 0;
+            free (element);
+            pthread_exit (NULL);
         }
     }
     checkGrid[1] = 1;
-   return 0;
+    free (element);
+    pthread_exit (NULL);
 }
 
 void * boxSolver(void* _args) {
     struct Element *element = (struct Element *) _args;
-if(solved == 0) {
-        return 0;
-    }
+
     int x = element->x;
     int y = element->y;
     int possibleNumber = element->possibleNumber;
@@ -107,13 +112,15 @@ if(solved == 0) {
     for (int i = 0; i < k; i++) {
         for (int j = 0; j < k; j++) {
             if (element->grid[i + startx][j + starty] == possibleNumber) {
-            solved = 0;
-               return 0;
+                checkGrid[2] = 0;
+                free (element);
+                pthread_exit (NULL);
             }
         }
     }
     checkGrid[2] = 1;
-    return 0;
+    free (element);
+    pthread_exit (NULL);
 }
 
 int backtracker_multithread(int sudoku[36][36], int y, int x, int size) {
@@ -312,8 +319,8 @@ int getEntry(struct cell optSudoku[36][36], int size, int k, int l) {
 int main(int argc, char *argv[]) {
 
     // Uncomment the below lines to start the timer
-    clock_t t;
-    t = clock();
+    // clock_t t;
+    // t = clock();
 
     int grid[36][36], size;
 
@@ -401,10 +408,10 @@ int main(int argc, char *argv[]) {
     print_grid(size, grid);
 
     // Uncomment the below lines to get Debug Logs
-    printf("[log]: Total Backtracks : %d\n", backtracks);
-    printf("[log]: Total Changes because of optimisation : %d\n", changes);
-    t = clock() - t;
-    double time_taken = ((double)t) / CLOCKS_PER_SEC;
-    printf("[log]: Code took %f seconds to execute\n", time_taken);
+    // printf("[log]: Total Backtracks : %d\n", backtracks);
+    // printf("[log]: Total Changes because of optimisation : %d\n", changes);
+    // t = clock() - t;
+    // double time_taken = ((double)t) / CLOCKS_PER_SEC;
+    // printf("[log]: Code took %f seconds to execute\n", time_taken);
 
 }
